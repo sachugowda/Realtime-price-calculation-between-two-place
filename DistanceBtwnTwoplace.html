@@ -1,0 +1,136 @@
+<!Doctype html>
+<html>
+<head>
+<title>Distance</title>
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="3">
+<tr>
+    <td colspan="2">
+		 Select Car:
+        <select id="price_per_mile">
+          <option value="5.00">Innova</option>
+          <option value="5.50">Sweadan</option>
+          <option value="5.00">Tempo</option>
+                         
+          
+       </select>
+        Source:
+        <input type="text" id="txtSource" style="width: 200px" />
+        &nbsp; Destination:
+        <input type="text" id="txtDestination" style="width: 200px" />
+        <br />
+        <input type="button" value="Get Route" onclick="GetRoute()" />
+        <hr />
+    </td>
+</tr>
+<tr>
+    <td colspan="2">
+        <div id="dvDistance">
+        </div>
+    </td>
+</tr>
+<tr>
+    <td>
+        <div id="dvMap" style="width: 500px; height: 500px">
+        </div>
+    </td>
+    <td>
+        <div id="dvPanel" style="width: 500px; height: 500px">
+        </div>
+    </td>
+</tr>
+</table>
+
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"></script>
+<script type="text/javascript">
+function CurrencyFormatted(amount) {
+	var i = parseFloat(amount);
+	if(isNaN(i)) { i = 0.00; }
+	var minus = '';
+	if(i < 0) { minus = '-'; }
+	i = Math.abs(i);
+	i = parseInt((i + .005) * 100);
+	i = i / 100;
+	s = new String(i);
+	if(s.indexOf('.') < 0) { s += '.00'; }
+	if(s.indexOf('.') == (s.length - 2)) { s += '0'; }
+	s = minus + s;
+	return s;
+}
+
+
+
+
+var source, destination;
+var directionsDisplay;
+var directionsService = new google.maps.DirectionsService();
+google.maps.event.addDomListener(window, 'load', function () {
+    new google.maps.places.SearchBox(document.getElementById('txtSource'));
+    new google.maps.places.SearchBox(document.getElementById('txtDestination'));
+    directionsDisplay = new google.maps.DirectionsRenderer({ 'draggable': true });
+});
+ 
+function GetRoute() {
+    var mumbai = new google.maps.LatLng(18.9750, 72.8258);
+    var mapOptions = {
+        zoom: 7,
+        center: mumbai
+    };
+    map = new google.maps.Map(document.getElementById('dvMap'), mapOptions);
+    directionsDisplay.setMap(map);
+    directionsDisplay.setPanel(document.getElementById('dvPanel'));
+ 
+    source = document.getElementById("txtSource").value;
+    destination = document.getElementById("txtDestination").value;
+ 
+    var request = {
+        origin: source,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING
+    };
+    directionsService.route(request, function (response, status) {
+        if (status == google.maps.DirectionsStatus.OK) {
+            directionsDisplay.setDirections(response);
+        }
+    });
+ 
+   
+    var service = new google.maps.DistanceMatrixService();
+    service.getDistanceMatrix({
+        origins: [source],
+        destinations: [destination],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC,
+        avoidHighways: false,
+        avoidTolls: false
+    }, function (response, status) {
+        if (status == google.maps.DistanceMatrixStatus.OK && response.rows[0].elements[0].status != "ZERO_RESULTS") {
+            var distance = response.rows[0].elements[0].distance.text;
+            var duration = response.rows[0].elements[0].duration.text;
+			var dvDistance = document.getElementById("dvDistance");
+			
+			 var rate = CurrencyFormatted(document.getElementById("price_per_mile").value);
+				var dist = parseInt(distance);
+				var price = dist * rate;
+           dvDistance.innerHTML = "";
+            dvDistance.innerHTML += "Distance: " + distance + "<br />";
+            dvDistance.innerHTML += "Duration:" + duration+ "<br />";
+			
+			
+			   
+				dvDistance.innerHTML += "Price:" + price+ " Rs";
+ 
+        } else {
+            alert("Unable to find the distance via road.");
+        }
+    });
+}
+
+</script>
+ 
+
+
+</body>
+</html>
